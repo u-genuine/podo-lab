@@ -1,0 +1,5 @@
+services:
+  api-server:
+    image: 782595374275.dkr.ecr.ap-northeast-2.amazonaws.com/podolab-api-server
+    ports:
+      - 80:8080
