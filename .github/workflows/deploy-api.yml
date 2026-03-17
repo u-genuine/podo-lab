@@ -1,0 +1,71 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+  S3_BUCKET: ${{ vars.S3_BUCKET }}
+  CODEDEPLOY_APPLICATION: ${{ vars.CODEDEPLOY_APPLICATION }}
+  CODEDEPLOY_DEPLOYMENT_GROUP: ${{ vars.CODEDEPLOY_DEPLOYMENT_GROUP }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: AWS 자격 증명 설정
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+
+      - name: ECR 로그인
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Docker 이미지 빌드
+        run: |
+          docker build --platform linux/amd64 -t $ECR_REPOSITORY ./podolab-api
+
+      - name: ECR 이미지 태그 변경 및 푸시
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: 배포 파일 준비
+        run: |
+          mkdir -p deploy/scripts
+          cp podolab-api/appspec.yml deploy/
+          cp podolab-api/docker-compose.yml deploy/
+          cp podolab-api/docker-compose.prod.yml deploy/
+          cp podolab-api/scripts/deploy.sh deploy/scripts/
+          cp podolab-api/scripts/cleanup.sh deploy/scripts/
+
+      - name: 배포 파일 압축
+        run: |
+          cd deploy
+          zip -r deploy.zip .
+
+      - name: S3 업로드
+        run: |
+          aws s3 cp deploy/deploy.zip s3://$S3_BUCKET/deploy.zip
+
+      - name: CodeDeploy 배포 실행
+        run: |
+          aws deploy create-deployment \
+            --application-name $CODEDEPLOY_APPLICATION \
+            --deployment-group-name $CODEDEPLOY_DEPLOYMENT_GROUP \
+            --s3-location bucket=$S3_BUCKET,key=deploy.zip,bundleType=zip
