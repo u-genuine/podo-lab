@@ -34,7 +34,8 @@ Controller는 reservation만 존재. concert/seat/user는 엔티티와 Repositor
 - 객체 생성은 `@Builder` 사용
 - 기본 생성자는 `@NoArgsConstructor(access = AccessLevel.PROTECTED)`
 - 비즈니스 로직(상태 변경 등)은 엔티티 내부 메서드로 구현
-- JPA Auditing: `createdAt`, `updatedAt` (`@EntityListeners(AuditingEntityListener.class)`)
+- JPA Auditing: `createdAt`, `updatedAt` → BaseEntity 상속으로 처리
+- BaseEntity 위치: `global/entity/BaseEntity.java`
 
 ### Lombok 허용
 - `@Getter`
