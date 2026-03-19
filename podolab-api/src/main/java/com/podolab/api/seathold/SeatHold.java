@@ -46,6 +46,7 @@ public class SeatHold extends BaseEntity {
         this.status = status;
     }
 
+	// 점유 해제: 이탈 또는 타임아웃 시 호출
     public void release() {
         if (this.status != SeatHoldStatus.ACTIVE) {
             throw new BaseException(ErrorCode.HOLD_NOT_ACTIVE);
@@ -53,6 +54,7 @@ public class SeatHold extends BaseEntity {
         this.status = SeatHoldStatus.EXPIRED;
     }
 
+	// 점유 확정: 결제 완료 시 호출
     public void confirm() {
         if (this.status != SeatHoldStatus.ACTIVE) {
             throw new BaseException(ErrorCode.HOLD_NOT_ACTIVE);
