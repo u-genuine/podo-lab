@@ -1,5 +1,6 @@
 package com.podolab.api.seathold;
 
+import com.podolab.api.concert.Concert;
 import com.podolab.api.global.entity.BaseEntity;
 import com.podolab.api.global.exception.BaseException;
 import com.podolab.api.global.exception.ErrorCode;
@@ -38,7 +39,7 @@ public class SeatHold extends BaseEntity {
     @Column(nullable = false)
     private SeatHoldStatus status;
 
-    @Builder
+    @Builder(access = AccessLevel.PRIVATE)
     private SeatHold(Seat seat, User user, LocalDateTime expiredAt, SeatHoldStatus status) {
         this.seat = seat;
         this.user = user;
@@ -46,19 +47,34 @@ public class SeatHold extends BaseEntity {
         this.status = status;
     }
 
-	// 점유 해제: 이탈 또는 타임아웃 시 호출
+    public static SeatHold create(User user, Seat seat, LocalDateTime expiredAt) {
+        return SeatHold.builder()
+                .user(user)
+                .seat(seat)
+                .expiredAt(expiredAt)
+                .status(SeatHoldStatus.ACTIVE)
+                .build();
+    }
+
+    // 점유 해제: 이탈 또는 타임아웃 시 호출
     public void release() {
         if (this.status != SeatHoldStatus.ACTIVE) {
             throw new BaseException(ErrorCode.HOLD_NOT_ACTIVE);
         }
         this.status = SeatHoldStatus.EXPIRED;
+        this.seat.cancelHold();
     }
 
-	// 점유 확정: 결제 완료 시 호출
+    // 점유 확정: 결제 완료 시 호출
     public void confirm() {
         if (this.status != SeatHoldStatus.ACTIVE) {
             throw new BaseException(ErrorCode.HOLD_NOT_ACTIVE);
         }
         this.status = SeatHoldStatus.CONFIRMED;
+        this.seat.confirm();
     }
+
+	public Concert getConcert() {
+		return this.seat.getConcert();
+	}
 }

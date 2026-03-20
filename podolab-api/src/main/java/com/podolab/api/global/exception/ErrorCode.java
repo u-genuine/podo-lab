@@ -18,7 +18,13 @@ public enum ErrorCode {
     SEAT_NOT_RESERVED(HttpStatus.CONFLICT, "예약 확정된 좌석이 아닙니다."),
 
     // SeatHold
-    HOLD_NOT_ACTIVE(HttpStatus.CONFLICT, "유효한 점유 상태가 아닙니다.");
+    HOLD_NOT_ACTIVE(HttpStatus.CONFLICT, "유효한 점유 상태가 아닙니다."),
+    HOLD_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 점유입니다."),
+    HOLD_USER_MISMATCH(HttpStatus.FORBIDDEN, "점유한 유저가 아닙니다."),
+
+    // Not Found
+    SEAT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 좌석입니다."),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다.");
 
     private final HttpStatus status;
     private final String message;
