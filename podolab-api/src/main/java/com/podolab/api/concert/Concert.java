@@ -28,7 +28,7 @@ public class Concert extends BaseEntity {
     @Column(nullable = false)
     private int totalSeats;
 
-    @Builder
+    @Builder(access = AccessLevel.PRIVATE)
     private Concert(String title, LocalDateTime concertDate, int totalSeats) {
         this.title = title;
         this.concertDate = concertDate;
