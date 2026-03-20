@@ -15,9 +15,18 @@ PodoLab은 실제 티켓팅에서 발생하는 문제들을 재현하고 해결 
 
 ## 진행 상황
 - [ ] Step 1: 기본 티켓팅 API
-
+- [ ] Step 2: 동시성 문제 재현 & 해결
+- [ ] Step 3: 대규모 트래픽 대응
 
 ## 기술 스택
-- Java, Spring Boot, JPA
+**Backend**
+- Java 17, Spring Boot 3.x, Spring Data JPA
+
+**Database**
 - MySQL
-- Docker, GitHub Actions, AWS EC2
+
+**Infra**
+- AWS EC2, AWS RDS
+- AWS ECR, AWS CodeDeploy, AWS S3
+- Docker
+- GitHub Actions (CI/CD)
