@@ -55,8 +55,10 @@ Controller는 reservation만 존재. concert/seat/user는 엔티티와 Repositor
 - `GlobalExceptionHandler`에서 일괄 처리
 
 ### DTO
-- Request: `XxxRequest`
-- Response: `XxxResponse`
+- Request: `XxxRequest` (record)
+  - `@NotNull` 등 검증 어노테이션 사용
+- Response: `XxxResponse` (record)
+  - 정적 팩토리 메서드 `of()` 사용
 - 엔티티를 Controller 밖으로 노출하지 말 것
 
 **공통 응답**
