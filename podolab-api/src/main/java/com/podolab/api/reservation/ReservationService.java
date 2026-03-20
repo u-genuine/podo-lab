@@ -34,7 +34,7 @@ public class ReservationService {
 
         seat.reserve();
 
-        SeatHold seatHold = SeatHold.create(user, seat, LocalDateTime.now().plusMinutes(5));
+        SeatHold seatHold = SeatHold.create(user, seat);
         return seatHoldRepository.save(seatHold).getId();
     }
 

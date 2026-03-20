@@ -47,11 +47,11 @@ public class SeatHold extends BaseEntity {
         this.status = status;
     }
 
-    public static SeatHold create(User user, Seat seat, LocalDateTime expiredAt) {
+    public static SeatHold create(User user, Seat seat) {
         return SeatHold.builder()
                 .user(user)
                 .seat(seat)
-                .expiredAt(expiredAt)
+                .expiredAt(LocalDateTime.now().plusMinutes(5))
                 .status(SeatHoldStatus.ACTIVE)
                 .build();
     }
