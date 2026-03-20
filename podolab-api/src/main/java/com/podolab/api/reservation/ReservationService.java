@@ -1,9 +1,11 @@
-package com.podolab.api.seathold;
+package com.podolab.api.reservation;
 
 import com.podolab.api.global.exception.BaseException;
 import com.podolab.api.global.exception.ErrorCode;
 import com.podolab.api.seat.Seat;
 import com.podolab.api.seat.SeatRepository;
+import com.podolab.api.seathold.SeatHold;
+import com.podolab.api.seathold.SeatHoldRepository;
 import com.podolab.api.ticket.Ticket;
 import com.podolab.api.ticket.TicketRepository;
 import com.podolab.api.user.User;
