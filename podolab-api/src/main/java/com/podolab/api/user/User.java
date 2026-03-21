@@ -23,9 +23,16 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Builder
+    @Builder(access = AccessLevel.PRIVATE)
     private User(String name, String email) {
         this.name = name;
         this.email = email;
+    }
+
+    public static User create(String name, String email) {
+        return User.builder()
+                .name(name)
+                .email(email)
+                .build();
     }
 }

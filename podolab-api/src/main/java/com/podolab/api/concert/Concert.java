@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -23,15 +23,23 @@ public class Concert extends BaseEntity {
     private String title;
 
     @Column(nullable = false)
-    private LocalDateTime concertDate;
+    private LocalDate concertDate;
 
     @Column(nullable = false)
     private int totalSeats;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Concert(String title, LocalDateTime concertDate, int totalSeats) {
+    private Concert(String title, LocalDate concertDate, int totalSeats) {
         this.title = title;
         this.concertDate = concertDate;
         this.totalSeats = totalSeats;
+    }
+
+    public static Concert create(String title, LocalDate concertDate, int totalSeats) {
+        return Concert.builder()
+                .title(title)
+                .concertDate(concertDate)
+                .totalSeats(totalSeats)
+                .build();
     }
 }

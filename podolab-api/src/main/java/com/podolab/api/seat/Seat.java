@@ -31,11 +31,19 @@ public class Seat extends BaseEntity {
     @Column(nullable = false)
     private SeatStatus status;
 
-    @Builder
+    @Builder(access = AccessLevel.PRIVATE)
     private Seat(Concert concert, int seatNumber, SeatStatus status) {
         this.concert = concert;
         this.seatNumber = seatNumber;
         this.status = status;
+    }
+
+    public static Seat create(Concert concert, int seatNumber, SeatStatus status) {
+        return Seat.builder()
+                .concert(concert)
+                .seatNumber(seatNumber)
+                .status(status)
+                .build();
     }
 
 	// 좌석 선점: 결제 페이지 진입 시 호출
