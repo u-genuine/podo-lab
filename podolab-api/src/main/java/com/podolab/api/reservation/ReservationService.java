@@ -29,7 +29,7 @@ public class ReservationService {
     public Long hold(Long userId, Long seatId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
-        Seat seat = seatRepository.findById(seatId)
+        Seat seat = seatRepository.findByIdWithLock(seatId)
                 .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
 
         seat.reserve();
