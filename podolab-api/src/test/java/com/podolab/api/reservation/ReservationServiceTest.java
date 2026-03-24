@@ -90,7 +90,7 @@ class ReservationServiceTest {
 					reservationService.hold(userId, seatId);
 					successCount.incrementAndGet(); // hold() 성공 시 카운트
 				} catch (Exception e) {
-					// hold 실패 — 정상적으로 거절된 케이스
+					System.out.println("이미 선택된 좌석 예외: " + e.getMessage());
 				} finally {
 					doneLatch.countDown(); // 스레드 종료 시 doneLatch 카운트 감소
 				}
@@ -102,8 +102,6 @@ class ReservationServiceTest {
 		executor.shutdown();
 		assertThat(completed).isTrue(); // 5초 안에 두 스레드가 정상 종료됐는지 확인
 
-		// 락이 없는 상태에서 여러 스레드가 동시에 접근하면 Race Condition이 발생한다.
-		// successCount > 1이면 동시성 문제가 재현된 것이므로 테스트 실패가 정상이다.
 		assertThat(successCount.get()).isEqualTo(1);
 	}
 }
