@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import com.podolab.api.concert.Concert;
 import com.podolab.api.concert.ConcertRepository;
@@ -44,6 +45,9 @@ class ReservationServiceTest {
 	@Autowired
 	private SeatHoldRepository seatHoldRepository;
 
+	@Autowired
+	private RedisTemplate<String, String> redisTemplate;
+
 	private static final int threadCount = 10;
 
 	private Long seatId;
@@ -69,6 +73,7 @@ class ReservationServiceTest {
 
 	@AfterEach
 	void tearDown() {
+		redisTemplate.delete("seats:" + seatId + ":hold");
 		seatHoldRepository.deleteAll();
 		seatRepository.deleteAll();
 		concertRepository.deleteAll();
@@ -103,5 +108,9 @@ class ReservationServiceTest {
 		assertThat(completed).isTrue(); // 5초 안에 두 스레드가 정상 종료됐는지 확인
 
 		assertThat(successCount.get()).isEqualTo(1);
+
+		// Redis에 점유 키가 저장됐는지 검증
+		String redisValue = redisTemplate.opsForValue().get("seats:" + seatId + ":hold");
+		assertThat(redisValue).isNotNull();
 	}
 }
