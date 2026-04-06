@@ -11,22 +11,37 @@ import com.podolab.api.ticket.TicketRepository;
 import com.podolab.api.user.User;
 import com.podolab.api.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
 public class ReservationService {
 
+    private static final String SEAT_HOLD_KEY_PREFIX = "seats:%d:hold";
+    private static final Duration SEAT_HOLD_TTL = Duration.ofMinutes(5);
+
     private final SeatRepository seatRepository;
     private final UserRepository userRepository;
     private final SeatHoldRepository seatHoldRepository;
     private final TicketRepository ticketRepository;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Transactional
     public Long hold(Long userId, Long seatId) {
+        String redisKey = SEAT_HOLD_KEY_PREFIX.formatted(seatId);
+
+		// 키가 없으면 저장 후 true 반환 / 키가 있으면 false 반환
+		Boolean acquired = redisTemplate.opsForValue()
+			.setIfAbsent(redisKey, String.valueOf(userId), SEAT_HOLD_TTL);
+
+        if (Boolean.FALSE.equals(acquired)) {
+            throw new BaseException(ErrorCode.SEAT_NOT_AVAILABLE);
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
         Seat seat = seatRepository.findByIdWithLock(seatId)
