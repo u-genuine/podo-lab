@@ -4,8 +4,6 @@ import com.podolab.api.global.exception.BaseException;
 import com.podolab.api.global.exception.ErrorCode;
 import com.podolab.api.seat.Seat;
 import com.podolab.api.seat.SeatRepository;
-import com.podolab.api.seathold.SeatHold;
-import com.podolab.api.seathold.SeatHoldRepository;
 import com.podolab.api.ticket.Ticket;
 import com.podolab.api.ticket.TicketRepository;
 import com.podolab.api.user.User;
@@ -26,7 +24,6 @@ public class ReservationService {
 
     private final SeatRepository seatRepository;
     private final UserRepository userRepository;
-    private final SeatHoldRepository seatHoldRepository;
     private final TicketRepository ticketRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -42,36 +39,53 @@ public class ReservationService {
             throw new BaseException(ErrorCode.SEAT_NOT_AVAILABLE);
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
         Seat seat = seatRepository.findByIdWithLock(seatId)
                 .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
 
         seat.reserve();
 
-        SeatHold seatHold = SeatHold.create(user, seat);
-        return seatHoldRepository.save(seatHold).getId();
+        return seatId;
     }
 
     @Transactional
-    public void release(Long seatHoldId) {
-        SeatHold seatHold = seatHoldRepository.findById(seatHoldId)
-                .orElseThrow(() -> new BaseException(ErrorCode.HOLD_NOT_FOUND));
+    public void release(Long seatId, Long userId) {
+        String redisKey = SEAT_HOLD_KEY_PREFIX.formatted(seatId);
 
-        seatHold.release();
-    }
-
-    @Transactional
-    public void confirm(Long seatHoldId, Long userId) {
-        SeatHold seatHold = seatHoldRepository.findById(seatHoldId)
-                .orElseThrow(() -> new BaseException(ErrorCode.HOLD_NOT_FOUND));
-
-        if (!seatHold.getUser().getId().equals(userId)) {
+        String storedUserId = redisTemplate.opsForValue().get(redisKey);
+        if (storedUserId == null) {
+            throw new BaseException(ErrorCode.HOLD_NOT_FOUND);
+        }
+        if (!storedUserId.equals(String.valueOf(userId))) {
             throw new BaseException(ErrorCode.HOLD_USER_MISMATCH);
         }
 
-        seatHold.confirm();
+        redisTemplate.delete(redisKey);
 
-        ticketRepository.save(Ticket.create(seatHold.getUser(), seatHold.getSeat(), seatHold.getConcert()));
+        Seat seat = seatRepository.findByIdWithLock(seatId)
+                .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
+        seat.cancelHold();
+    }
+
+    @Transactional
+    public void confirm(Long seatId, Long userId) {
+        String redisKey = SEAT_HOLD_KEY_PREFIX.formatted(seatId);
+
+        String storedUserId = redisTemplate.opsForValue().get(redisKey);
+        if (storedUserId == null) {
+            throw new BaseException(ErrorCode.HOLD_NOT_FOUND);
+        }
+        if (!storedUserId.equals(String.valueOf(userId))) {
+            throw new BaseException(ErrorCode.HOLD_USER_MISMATCH);
+        }
+
+        redisTemplate.delete(redisKey);
+
+        Seat seat = seatRepository.findByIdWithLock(seatId)
+                .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
+        seat.confirm();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+        ticketRepository.save(Ticket.create(user, seat, seat.getConcert()));
     }
 }
