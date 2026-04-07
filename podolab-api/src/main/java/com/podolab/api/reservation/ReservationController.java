@@ -30,7 +30,7 @@ public class ReservationController {
 
     @PostMapping("/confirm")
     public ResponseEntity<ApiResponse<Void>> confirm(@RequestBody @Valid ConfirmRequest request) {
-        reservationService.confirm(request.seatHoldId(), request.userId());
+        reservationService.confirm(request.seatId(), request.userId());
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }
