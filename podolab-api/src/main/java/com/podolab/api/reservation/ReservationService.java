@@ -48,11 +48,22 @@ public class ReservationService {
     }
 
     @Transactional
-    public void release(Long seatHoldId) {
-        SeatHold seatHold = seatHoldRepository.findById(seatHoldId)
-                .orElseThrow(() -> new BaseException(ErrorCode.HOLD_NOT_FOUND));
+    public void release(Long seatId, Long userId) {
+        String redisKey = SEAT_HOLD_KEY_PREFIX.formatted(seatId);
 
-        seatHold.release();
+        String storedUserId = redisTemplate.opsForValue().get(redisKey);
+        if (storedUserId == null) {
+            throw new BaseException(ErrorCode.HOLD_NOT_FOUND);
+        }
+        if (!storedUserId.equals(String.valueOf(userId))) {
+            throw new BaseException(ErrorCode.HOLD_USER_MISMATCH);
+        }
+
+        redisTemplate.delete(redisKey);
+
+        Seat seat = seatRepository.findByIdWithLock(seatId)
+                .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
+        seat.cancelHold();
     }
 
     @Transactional

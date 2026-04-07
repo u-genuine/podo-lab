@@ -24,7 +24,7 @@ public class ReservationController {
 
     @PostMapping("/release")
     public ResponseEntity<ApiResponse<Void>> release(@RequestBody @Valid ReleaseRequest request) {
-        reservationService.release(request.seatHoldId());
+        reservationService.release(request.seatId(), request.userId());
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
