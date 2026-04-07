@@ -1,9 +1,9 @@
 package com.podolab.api.reservation;
 
 public record HoldResponse(
-        Long seatHoldId
+        Long seatId
 ) {
-    public static HoldResponse of(Long seatHoldId) {
-        return new HoldResponse(seatHoldId);
+    public static HoldResponse of(Long seatId) {
+        return new HoldResponse(seatId);
     }
 }

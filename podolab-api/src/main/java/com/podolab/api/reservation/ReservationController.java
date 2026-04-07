@@ -18,8 +18,8 @@ public class ReservationController {
 
     @PostMapping("/hold")
     public ResponseEntity<ApiResponse<HoldResponse>> hold(@RequestBody @Valid HoldRequest request) {
-        Long seatHoldId = reservationService.hold(request.userId(), request.seatId());
-        return ResponseEntity.ok(ApiResponse.ok(HoldResponse.of(seatHoldId)));
+        Long seatId = reservationService.hold(request.userId(), request.seatId());
+        return ResponseEntity.ok(ApiResponse.ok(HoldResponse.of(seatId)));
     }
 
     @PostMapping("/release")

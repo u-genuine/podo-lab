@@ -8,8 +8,6 @@ import com.podolab.api.seathold.SeatHold;
 import com.podolab.api.seathold.SeatHoldRepository;
 import com.podolab.api.ticket.Ticket;
 import com.podolab.api.ticket.TicketRepository;
-import com.podolab.api.user.User;
-import com.podolab.api.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -25,7 +23,6 @@ public class ReservationService {
     private static final Duration SEAT_HOLD_TTL = Duration.ofMinutes(5);
 
     private final SeatRepository seatRepository;
-    private final UserRepository userRepository;
     private final SeatHoldRepository seatHoldRepository;
     private final TicketRepository ticketRepository;
     private final RedisTemplate<String, String> redisTemplate;
@@ -42,15 +39,12 @@ public class ReservationService {
             throw new BaseException(ErrorCode.SEAT_NOT_AVAILABLE);
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
         Seat seat = seatRepository.findByIdWithLock(seatId)
                 .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
 
         seat.reserve();
 
-        SeatHold seatHold = SeatHold.create(user, seat);
-        return seatHoldRepository.save(seatHold).getId();
+        return seatId;
     }
 
     @Transactional
