@@ -23,7 +23,6 @@ import com.podolab.api.concert.ConcertRepository;
 import com.podolab.api.seat.Seat;
 import com.podolab.api.seat.SeatRepository;
 import com.podolab.api.seat.SeatStatus;
-import com.podolab.api.seathold.SeatHoldRepository;
 import com.podolab.api.user.User;
 import com.podolab.api.user.UserRepository;
 
@@ -41,9 +40,6 @@ class ReservationServiceTest {
 
 	@Autowired
 	private SeatRepository seatRepository;
-
-	@Autowired
-	private SeatHoldRepository seatHoldRepository;
 
 	@Autowired
 	private RedisTemplate<String, String> redisTemplate;
@@ -74,7 +70,6 @@ class ReservationServiceTest {
 	@AfterEach
 	void tearDown() {
 		redisTemplate.delete("seats:" + seatId + ":hold");
-		seatHoldRepository.deleteAll();
 		seatRepository.deleteAll();
 		concertRepository.deleteAll();
 		userRepository.deleteAll();
