@@ -46,28 +46,12 @@ public class Seat extends BaseEntity {
                 .build();
     }
 
-	// 좌석 선점: 결제 페이지 진입 시 호출
-    public void reserve() {
+	// 예약 확정: 결제 완료 시 호출
+    public void confirm() {
         if (this.status != SeatStatus.AVAILABLE) {
             throw new BaseException(ErrorCode.SEAT_NOT_AVAILABLE);
         }
-        this.status = SeatStatus.HELD;
-    }
-
-	// 예약 확정: 결제 완료 시 호출
-    public void confirm() {
-        if (this.status != SeatStatus.HELD) {
-            throw new BaseException(ErrorCode.SEAT_NOT_HELD);
-        }
         this.status = SeatStatus.RESERVED;
-    }
-
-	// 선점 취소: 결제 페이지 이탈 또는 타임아웃 시 호출
-    public void cancelHold() {
-        if (this.status != SeatStatus.HELD) {
-            throw new BaseException(ErrorCode.SEAT_NOT_HELD);
-        }
-        this.status = SeatStatus.AVAILABLE;
     }
 
 	// 예약 취소: 결제 완료 후 취소 요청 시 호출

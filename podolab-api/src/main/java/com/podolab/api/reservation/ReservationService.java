@@ -39,10 +39,8 @@ public class ReservationService {
             throw new BaseException(ErrorCode.SEAT_NOT_AVAILABLE);
         }
 
-        Seat seat = seatRepository.findByIdWithLock(seatId)
+        seatRepository.findByIdWithLock(seatId)
                 .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
-
-        seat.reserve();
 
         return seatId;
     }
@@ -61,9 +59,8 @@ public class ReservationService {
 
         redisTemplate.delete(redisKey);
 
-        Seat seat = seatRepository.findByIdWithLock(seatId)
+        seatRepository.findByIdWithLock(seatId)
                 .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
-        seat.cancelHold();
     }
 
     @Transactional
