@@ -21,6 +21,7 @@ public enum ErrorCode {
     HOLD_USER_MISMATCH(HttpStatus.FORBIDDEN, "점유한 사용자가 아닙니다."),
 
     // Not Found
+    CONCERT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 콘서트입니다."),
     SEAT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 좌석입니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 사용자입니다.");
 
