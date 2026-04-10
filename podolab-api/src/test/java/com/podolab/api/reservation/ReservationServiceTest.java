@@ -46,7 +46,8 @@ class ReservationServiceTest {
 
 	private static final int threadCount = 10;
 
-	private Long seatId;
+	private Long concertId;
+	private int seatNumber;
 	private List<Long> userIds;
 
 	@BeforeEach
@@ -54,11 +55,12 @@ class ReservationServiceTest {
 		Concert concert = concertRepository.save(
 			Concert.create("테스트 콘서트", LocalDate.now().plusDays(7), 100)
 		);
+		concertId = concert.getId();
+		seatNumber = 1;
 
-		Seat seat = seatRepository.save(
-			Seat.create(concert, 1, SeatStatus.AVAILABLE)
+		seatRepository.save(
+			Seat.create(concert, seatNumber, SeatStatus.AVAILABLE)
 		);
-		seatId = seat.getId();
 
 		userIds = new ArrayList<>();
 		for (int i = 0; i < threadCount; i++) {
@@ -69,7 +71,7 @@ class ReservationServiceTest {
 
 	@AfterEach
 	void tearDown() {
-		redisTemplate.delete("seats:" + seatId + ":hold");
+		redisTemplate.delete("concerts:" + concertId + ":seats:" + seatNumber + ":hold");
 		seatRepository.deleteAll();
 		concertRepository.deleteAll();
 		userRepository.deleteAll();
@@ -87,7 +89,7 @@ class ReservationServiceTest {
 			executor.execute(() -> {
 				try {
 					startLatch.await(); // startLatch가 0이 될 때까지 대기 (두 스레드 동시 출발하도록)
-					reservationService.hold(userId, seatId);
+					reservationService.hold(userId, concertId, seatNumber);
 					successCount.incrementAndGet(); // hold() 성공 시 카운트
 				} catch (Exception e) {
 					System.out.println("이미 선택된 좌석 예외: " + e.getMessage());
@@ -105,7 +107,7 @@ class ReservationServiceTest {
 		assertThat(successCount.get()).isEqualTo(1);
 
 		// Redis에 점유 키가 저장됐는지 검증
-		String redisValue = redisTemplate.opsForValue().get("seats:" + seatId + ":hold");
+		String redisValue = redisTemplate.opsForValue().get("concerts:" + concertId + ":seats:" + seatNumber + ":hold");
 		assertThat(redisValue).isNotNull();
 	}
 }

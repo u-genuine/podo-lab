@@ -18,19 +18,19 @@ public class ReservationController {
 
     @PostMapping("/hold")
     public ResponseEntity<ApiResponse<HoldResponse>> hold(@RequestBody @Valid HoldRequest request) {
-        Long seatId = reservationService.hold(request.userId(), request.seatId());
-        return ResponseEntity.ok(ApiResponse.ok(HoldResponse.of(seatId)));
+        reservationService.hold(request.userId(), request.concertId(), request.seatNumber());
+        return ResponseEntity.ok(ApiResponse.ok(HoldResponse.of(request.concertId(), request.seatNumber())));
     }
 
     @PostMapping("/release")
     public ResponseEntity<ApiResponse<Void>> release(@RequestBody @Valid ReleaseRequest request) {
-        reservationService.release(request.seatId(), request.userId());
+        reservationService.release(request.concertId(), request.seatNumber(), request.userId());
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
     @PostMapping("/confirm")
     public ResponseEntity<ApiResponse<Void>> confirm(@RequestBody @Valid ConfirmRequest request) {
-        reservationService.confirm(request.seatId(), request.userId());
+        reservationService.confirm(request.concertId(), request.seatNumber(), request.userId());
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }

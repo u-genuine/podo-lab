@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record HoldRequest(
         @NotNull Long userId,
-        @NotNull Long seatId
+        @NotNull Long concertId,
+        @NotNull Integer seatNumber
 ) {
 }
