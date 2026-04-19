@@ -30,13 +30,9 @@ public class ConcertService {
 
     @Transactional(readOnly = true)
     public List<SeatResponse> getSeats(Long concertId) {
-        if (!concertRepository.existsById(concertId)) {
-            throw new BaseException(ErrorCode.CONCERT_NOT_FOUND);
-        }
-
-        String cacheKey = SEAT_CACHE_KEY_PREFIX.formatted(concertId);
+		String cacheKey = SEAT_CACHE_KEY_PREFIX.formatted(concertId);
 		HashOperations<String, String, String> hashOps = redisTemplate.opsForHash();
-        Map<String, String> cached = hashOps.entries(cacheKey);
+		Map<String, String> cached = hashOps.entries(cacheKey);
 
 		// Cache Hit
         if (!cached.isEmpty()) {
@@ -51,6 +47,10 @@ public class ConcertService {
 
 		// Cache Miss
 		// 1. DB 조회
+		if (!concertRepository.existsById(concertId)) {
+			throw new BaseException(ErrorCode.CONCERT_NOT_FOUND);
+		}
+
         List<SeatResponse> seats = seatRepository.findByConcertId(concertId).stream()
                 .map(SeatResponse::of)
                 .toList();
