@@ -19,7 +19,8 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class ReservationService {
 
-    private static final String SEAT_HOLD_KEY_PREFIX = "seats:%d:hold";
+    private static final String SEAT_HOLD_KEY_PREFIX = "concerts:%d:seats:%d:hold";
+    private static final String SEAT_CACHE_KEY_PREFIX = "concerts:%d:seats";
     private static final Duration SEAT_HOLD_TTL = Duration.ofMinutes(5);
 
     private final SeatRepository seatRepository;
@@ -28,8 +29,8 @@ public class ReservationService {
     private final RedisTemplate<String, String> redisTemplate;
 
     @Transactional
-    public Long hold(Long userId, Long seatId) {
-        String redisKey = SEAT_HOLD_KEY_PREFIX.formatted(seatId);
+    public void hold(Long userId, Long concertId, int seatNumber) {
+        String redisKey = SEAT_HOLD_KEY_PREFIX.formatted(concertId, seatNumber);
 
 		// 키가 없으면 저장 후 true 반환 / 키가 있으면 false 반환
 		Boolean acquired = redisTemplate.opsForValue()
@@ -39,15 +40,15 @@ public class ReservationService {
             throw new BaseException(ErrorCode.SEAT_NOT_AVAILABLE);
         }
 
-        seatRepository.findByIdWithLock(seatId)
+        seatRepository.findByConcertIdAndSeatNumberWithLock(concertId, seatNumber)
                 .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
 
-        return seatId;
+        updateSeatCache(concertId, seatNumber, false);
     }
 
     @Transactional
-    public void release(Long seatId, Long userId) {
-        String redisKey = SEAT_HOLD_KEY_PREFIX.formatted(seatId);
+    public void release(Long concertId, int seatNumber, Long userId) {
+        String redisKey = SEAT_HOLD_KEY_PREFIX.formatted(concertId, seatNumber);
 
         String storedUserId = redisTemplate.opsForValue().get(redisKey);
         if (storedUserId == null) {
@@ -59,13 +60,15 @@ public class ReservationService {
 
         redisTemplate.delete(redisKey);
 
-        seatRepository.findByIdWithLock(seatId)
+        seatRepository.findByConcertIdAndSeatNumberWithLock(concertId, seatNumber)
                 .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
+
+        updateSeatCache(concertId, seatNumber, true);
     }
 
     @Transactional
-    public void confirm(Long seatId, Long userId) {
-        String redisKey = SEAT_HOLD_KEY_PREFIX.formatted(seatId);
+    public void confirm(Long concertId, int seatNumber, Long userId) {
+        String redisKey = SEAT_HOLD_KEY_PREFIX.formatted(concertId, seatNumber);
 
         String storedUserId = redisTemplate.opsForValue().get(redisKey);
         if (storedUserId == null) {
@@ -77,12 +80,21 @@ public class ReservationService {
 
         redisTemplate.delete(redisKey);
 
-        Seat seat = seatRepository.findByIdWithLock(seatId)
+        Seat seat = seatRepository.findByConcertIdAndSeatNumberWithLock(concertId, seatNumber)
                 .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
         seat.confirm();
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
         ticketRepository.save(Ticket.create(user, seat, seat.getConcert()));
+
+        updateSeatCache(concertId, seatNumber, false);
+    }
+
+    private void updateSeatCache(Long concertId, int seatNumber, boolean available) {
+        String cacheKey = SEAT_CACHE_KEY_PREFIX.formatted(concertId);
+        if (redisTemplate.hasKey(cacheKey)) {
+            redisTemplate.opsForHash().put(cacheKey, String.valueOf(seatNumber), String.valueOf(available));
+        }
     }
 }
