@@ -20,6 +20,7 @@ import java.time.Duration;
 public class ReservationService {
 
     private static final String SEAT_HOLD_KEY_PREFIX = "concerts:%d:seats:%d:hold";
+    private static final String SEAT_CACHE_KEY_PREFIX = "concerts:%d:seats";
     private static final Duration SEAT_HOLD_TTL = Duration.ofMinutes(5);
 
     private final SeatRepository seatRepository;
@@ -41,6 +42,8 @@ public class ReservationService {
 
         seatRepository.findByConcertIdAndSeatNumberWithLock(concertId, seatNumber)
                 .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
+
+        updateSeatCache(concertId, seatNumber, false);
     }
 
     @Transactional
@@ -59,6 +62,8 @@ public class ReservationService {
 
         seatRepository.findByConcertIdAndSeatNumberWithLock(concertId, seatNumber)
                 .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
+
+        updateSeatCache(concertId, seatNumber, true);
     }
 
     @Transactional
@@ -82,5 +87,14 @@ public class ReservationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
         ticketRepository.save(Ticket.create(user, seat, seat.getConcert()));
+
+        updateSeatCache(concertId, seatNumber, false);
+    }
+
+    private void updateSeatCache(Long concertId, int seatNumber, boolean available) {
+        String cacheKey = SEAT_CACHE_KEY_PREFIX.formatted(concertId);
+        if (redisTemplate.hasKey(cacheKey)) {
+            redisTemplate.opsForHash().put(cacheKey, String.valueOf(seatNumber), String.valueOf(available));
+        }
     }
 }

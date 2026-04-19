@@ -72,6 +72,7 @@ class ReservationServiceTest {
 	@AfterEach
 	void tearDown() {
 		redisTemplate.delete("concerts:" + concertId + ":seats:" + seatNumber + ":hold");
+		redisTemplate.delete("concerts:" + concertId + ":seats");
 		seatRepository.deleteAll();
 		concertRepository.deleteAll();
 		userRepository.deleteAll();
@@ -109,5 +110,28 @@ class ReservationServiceTest {
 		// Redis에 점유 키가 저장됐는지 검증
 		String redisValue = redisTemplate.opsForValue().get("concerts:" + concertId + ":seats:" + seatNumber + ":hold");
 		assertThat(redisValue).isNotNull();
+	}
+
+	@Test
+	void hold_성공_시_캐시_false로_업데이트() {
+		String cacheKey = "concerts:" + concertId + ":seats";
+		redisTemplate.opsForHash().put(cacheKey, String.valueOf(seatNumber), "true");
+
+		reservationService.hold(userIds.get(0), concertId, seatNumber);
+
+		Object cached = redisTemplate.opsForHash().get(cacheKey, String.valueOf(seatNumber));
+		assertThat(cached).isEqualTo("false");
+	}
+
+	@Test
+	void release_시_캐시_true로_업데이트() {
+		String cacheKey = "concerts:" + concertId + ":seats";
+		redisTemplate.opsForHash().put(cacheKey, String.valueOf(seatNumber), "false");
+
+		reservationService.hold(userIds.get(0), concertId, seatNumber);
+		reservationService.release(concertId, seatNumber, userIds.get(0));
+
+		Object cached = redisTemplate.opsForHash().get(cacheKey, String.valueOf(seatNumber));
+		assertThat(cached).isEqualTo("true");
 	}
 }
