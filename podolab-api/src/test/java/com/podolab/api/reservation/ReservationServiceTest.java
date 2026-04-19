@@ -47,6 +47,7 @@ class ReservationServiceTest {
 	private static final int threadCount = 10;
 
 	private Long concertId;
+	private Long seatId;
 	private int seatNumber;
 	private List<Long> userIds;
 
@@ -58,9 +59,10 @@ class ReservationServiceTest {
 		concertId = concert.getId();
 		seatNumber = 1;
 
-		seatRepository.save(
+		Seat seat = seatRepository.save(
 			Seat.create(concert, seatNumber, SeatStatus.AVAILABLE)
 		);
+		seatId = seat.getId();
 
 		userIds = new ArrayList<>();
 		for (int i = 0; i < threadCount; i++) {
@@ -73,9 +75,9 @@ class ReservationServiceTest {
 	void tearDown() {
 		redisTemplate.delete("concerts:" + concertId + ":seats:" + seatNumber + ":hold");
 		redisTemplate.delete("concerts:" + concertId + ":seats");
-		seatRepository.deleteAll();
-		concertRepository.deleteAll();
-		userRepository.deleteAll();
+		seatRepository.deleteById(seatId);
+		concertRepository.deleteById(concertId);
+		userRepository.deleteAllById(userIds);
 	}
 
 	@Test
