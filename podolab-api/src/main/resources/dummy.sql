@@ -3,8 +3,9 @@ DELETE FROM seat;
 DELETE FROM concert;
 
 -- 콘서트 1개 삽입
-INSERT INTO concert (title, concert_date, total_seats, created_at, updated_at)
-VALUES ('PODOLAB 콘서트 2026', '2026-08-01', 10000, NOW(), NOW());
+-- open_at: 캐시 워밍 테스트 시 NOW() + INTERVAL 4 MINUTE 로 변경하여 사용
+INSERT INTO concert (title, concert_date, total_seats, open_at, created_at, updated_at)
+VALUES ('PODOLAB 콘서트 2026', '2026-08-01', 10000, '2026-08-01 09:00:00', NOW(), NOW());
 
 -- 좌석 10000개 삽입 (seatNumber 1~10000, 전부 AVAILABLE)
 DROP PROCEDURE IF EXISTS insert_seats;
