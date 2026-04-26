@@ -65,6 +65,9 @@ class ReservationServiceTest {
 		);
 		seatId = seat.getId();
 
+		// hold 캐시에서 좌석 존재 여부를 확인하므로 미리 세팅
+		redisTemplate.opsForHash().put("concerts:" + concertId + ":seats", String.valueOf(seatNumber), "true");
+
 		userIds = new ArrayList<>();
 		for (int i = 0; i < threadCount; i++) {
 			User user = userRepository.save(User.create("유저" + (i + 1), "user" + (i + 1) + "@test.com"));
