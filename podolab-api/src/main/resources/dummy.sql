@@ -1,6 +1,14 @@
 -- 기존 데이터 초기화
+DELETE FROM ticket;
 DELETE FROM seat;
 DELETE FROM concert;
+DELETE FROM users;
+
+-- AUTO_INCREMENT 초기화
+ALTER TABLE seat AUTO_INCREMENT = 1;
+ALTER TABLE concert AUTO_INCREMENT = 1;
+ALTER TABLE users AUTO_INCREMENT = 1;
+ALTER TABLE ticket AUTO_INCREMENT = 1;
 
 -- 콘서트 1개 삽입
 -- open_at: 캐시 워밍 테스트 시 NOW() + INTERVAL 4 MINUTE 로 변경하여 사용
