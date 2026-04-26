@@ -30,6 +30,8 @@ public class ReservationService {
 
     @Transactional
     public void hold(Long userId, Long concertId, int seatNumber) {
+        validateSeatInCache(concertId, seatNumber);
+
         String redisKey = SEAT_HOLD_KEY_PREFIX.formatted(concertId, seatNumber);
 
 		// 키가 없으면 저장 후 true 반환 / 키가 있으면 false 반환
@@ -39,9 +41,6 @@ public class ReservationService {
         if (Boolean.FALSE.equals(acquired)) {
             throw new BaseException(ErrorCode.SEAT_NOT_AVAILABLE);
         }
-
-        seatRepository.findByConcertIdAndSeatNumberWithLock(concertId, seatNumber)
-                .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
 
         updateSeatCache(concertId, seatNumber, false);
     }
@@ -59,10 +58,6 @@ public class ReservationService {
         }
 
         redisTemplate.delete(redisKey);
-
-        seatRepository.findByConcertIdAndSeatNumberWithLock(concertId, seatNumber)
-                .orElseThrow(() -> new BaseException(ErrorCode.SEAT_NOT_FOUND));
-
         updateSeatCache(concertId, seatNumber, true);
     }
 
@@ -91,9 +86,16 @@ public class ReservationService {
         updateSeatCache(concertId, seatNumber, false);
     }
 
+    private void validateSeatInCache(Long concertId, int seatNumber) {
+        String cacheKey = SEAT_CACHE_KEY_PREFIX.formatted(concertId);
+        if (!redisTemplate.opsForHash().hasKey(cacheKey, String.valueOf(seatNumber))) {
+            throw new BaseException(ErrorCode.SEAT_NOT_FOUND);
+        }
+    }
+
     private void updateSeatCache(Long concertId, int seatNumber, boolean available) {
         String cacheKey = SEAT_CACHE_KEY_PREFIX.formatted(concertId);
-        if (redisTemplate.hasKey(cacheKey)) {
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(cacheKey))) {
             redisTemplate.opsForHash().put(cacheKey, String.valueOf(seatNumber), String.valueOf(available));
         }
     }
