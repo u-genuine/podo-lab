@@ -35,6 +35,7 @@ public class CacheWarmingScheduler {
 
         List<Concert> upcoming = concertRepository.findByOpenAtBetween(now, until);
         if (upcoming.isEmpty()) {
+			log.debug("no upcoming concert found");
             return;
         }
 
