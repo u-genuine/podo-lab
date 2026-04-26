@@ -3,6 +3,7 @@ package com.podolab.api.reservation;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -54,7 +55,7 @@ class ReservationServiceTest {
 	@BeforeEach
 	void setUp() {
 		Concert concert = concertRepository.save(
-			Concert.create("테스트 콘서트", LocalDate.now().plusDays(7), 100)
+			Concert.create("테스트 콘서트", LocalDate.now().plusDays(7), 100, LocalDateTime.now().plusDays(7))
 		);
 		concertId = concert.getId();
 		seatNumber = 1;
@@ -63,6 +64,9 @@ class ReservationServiceTest {
 			Seat.create(concert, seatNumber, SeatStatus.AVAILABLE)
 		);
 		seatId = seat.getId();
+
+		// hold 캐시에서 좌석 존재 여부를 확인하므로 미리 세팅
+		redisTemplate.opsForHash().put("concerts:" + concertId + ":seats", String.valueOf(seatNumber), "true");
 
 		userIds = new ArrayList<>();
 		for (int i = 0; i < threadCount; i++) {
