@@ -28,7 +28,6 @@ public class ReservationService {
     private final TicketRepository ticketRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
-    @Transactional
     public void hold(Long userId, Long concertId, int seatNumber) {
         validateSeatInCache(concertId, seatNumber);
 
@@ -45,7 +44,6 @@ public class ReservationService {
         updateSeatCache(concertId, seatNumber, false);
     }
 
-    @Transactional
     public void release(Long concertId, int seatNumber, Long userId) {
         String redisKey = SEAT_HOLD_KEY_PREFIX.formatted(concertId, seatNumber);
 
